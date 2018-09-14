@@ -151,9 +151,9 @@ public class IoCContextImplTest {
     @Test
     void should_one_clazz_implement_interface_and_extends_clazz_get_two_different_instance() {
         ioCContext.registerBean(MyBaseBean.class, MyBeanExtendsAndImplements.class);
-        ioCContext.registerBean(IMyBean.class, MyBeanExtendsAndImplements.class);
+        ioCContext.registerBean(MyBeanBehavior.class, MyBeanExtendsAndImplements.class);
         MyBaseBean myExtendsBean = ioCContext.getBean(MyBaseBean.class);
-        IMyBean myImplementsBean = ioCContext.getBean(IMyBean.class);
+        MyBeanBehavior myImplementsBean = ioCContext.getBean(MyBeanBehavior.class);
 
         assertNotSame(myExtendsBean, myImplementsBean);
         assertEquals(myExtendsBean.getClass(), myImplementsBean.getClass());
@@ -161,8 +161,8 @@ public class IoCContextImplTest {
 
     @Test
     void should_get_instance_when_implements_interface() {
-        ioCContext.registerBean(IMyBean.class, MyBeanOnlyImplement.class);
-        IMyBean bean = ioCContext.getBean(IMyBean.class);
+        ioCContext.registerBean(MyBeanBehavior.class, MyBeanOnlyImplement.class);
+        MyBeanBehavior bean = ioCContext.getBean(MyBeanBehavior.class);
         assertEquals(MyBeanOnlyImplement.class, bean.getClass());
     }
 

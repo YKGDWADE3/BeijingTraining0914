@@ -1,5 +1,5 @@
 package bean;
 
-public interface IMyBean {
+public interface MyBeanBehavior {
     String greet();
 }
