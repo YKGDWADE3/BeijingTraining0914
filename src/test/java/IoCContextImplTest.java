@@ -167,11 +167,20 @@ public class IoCContextImplTest {
     }
 
     @Test
-    void should_throw_exception_when_bean_clazz_is_null() {
+    void should_throw_exception_when_bean_clazz_has_no_default_constructor() {
         Runnable runnable = () ->{
             ioCContext.registerBean(MyBeanWithoutDefaultConstructor.class, MyBeanExtendsWithoutDefaultConstructor.class);
         };
         IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnable::run);
         assertEquals(MyBeanExtendsWithoutDefaultConstructor.class.getCanonicalName() + " has no default constructor.", illegalArgumentException.getMessage());
+    }
+
+    @Test
+    void should_throw_exception_when_bean_clazz_is_null() {
+        Runnable runnable = () ->{
+            ioCContext.registerBean(MyBeanWithoutDefaultConstructor.class, null);
+        };
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnable::run);
+        assertEquals("beanClazz is mandatory", illegalArgumentException.getMessage());
     }
 }
