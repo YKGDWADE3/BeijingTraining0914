@@ -1,0 +1,83 @@
+package IoC;
+
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+
+public class IoCContextImpl implements IoCContext {
+
+    private HashMap<Class<?>, Boolean> registerHashMap;
+    private HashMap<Class<?>, Class<?>> actualClassHashMap;
+
+    public IoCContextImpl() {
+        this.registerHashMap = new HashMap<>();
+        this.actualClassHashMap = new HashMap<>();
+    }
+
+    @Override
+    public void registerBean(Class<?> beanClazz) {
+        checkResolveClazzWhenRegister(beanClazz, beanClazz);
+        storeResolveAndBeanClazz(beanClazz, beanClazz);
+    }
+
+    @Override
+    public <T> void registerBean(Class<? super T> resolveClazz, Class<T> beanClazz) {
+        checkResolveClazzWhenRegister(resolveClazz, beanClazz);
+        storeResolveAndBeanClazz(resolveClazz, beanClazz);
+    }
+
+    @Override
+    public <T> T getBean(Class<T> resolveClazz) {
+        if (resolveClazz == null) {
+            throw new IllegalArgumentException();
+        }
+        if (!registerHashMap.containsKey(resolveClazz)) {
+            throw new IllegalStateException();
+        }
+
+        T instance = null;
+        try {
+            instance = (T) actualClassHashMap.get(resolveClazz).newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        registerHashMap.put(resolveClazz, true);
+        return instance;
+    }
+
+    private void checkResolveClazzWhenRegister(Class<?> resolveClazz, Class<?> beanClazz) {
+        if (resolveClazz == null || beanClazz == null) {
+            throw new IllegalArgumentException("beanClazz is mandatory");
+        }
+        int modifiers = beanClazz.getModifiers();
+        if (Modifier.isInterface(modifiers) || beanClazz == Class.class) {
+            throw new IllegalArgumentException(beanClazz.getCanonicalName() + " is abstract");
+        }
+
+        boolean hasDefaultConstructor = false;
+        Constructor<?>[] declaredConstructors = beanClazz.getDeclaredConstructors();
+        for (Constructor<?> constructor : declaredConstructors) {
+            if (constructor.getParameterTypes().length == 0) {
+                hasDefaultConstructor = true;
+            }
+        }
+        if (!hasDefaultConstructor) {
+            throw new IllegalArgumentException(beanClazz.getCanonicalName() + " has no default constructor.");
+        }
+        if (registerHashMap.containsKey(resolveClazz) && registerHashMap.get(resolveClazz)) {
+            throw new IllegalStateException();
+        }
+    }
+
+
+
+    private void storeResolveAndBeanClazz(Class<?> resolveClazz, Class<?> beanClazz) {
+        if (!actualClassHashMap.containsKey(resolveClazz)) {
+            registerHashMap.put(resolveClazz, false);
+        }
+        actualClassHashMap.put(resolveClazz, beanClazz);
+    }
+
+
+
+}
