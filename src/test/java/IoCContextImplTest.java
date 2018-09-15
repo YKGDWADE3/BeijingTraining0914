@@ -189,9 +189,17 @@ public class IoCContextImplTest {
     void should_create_instance_with_dependency() throws NoSuchFieldException {
         ioCContext.registerBean(MyBeanWithDependency.class);
         ioCContext.registerBean(MyDependency.class);
+        ioCContext.registerBean(MyBean.class);
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
         Field myDependency = myBeanWithDependency.getClass().getDeclaredField("myDependency");
         assertEquals(MyBeanWithDependency.class, myBeanWithDependency.getClass());
         assertEquals(MyDependency.class, myDependency.getType());
+    }
+
+    @Test
+    void should_throw_exception_when_any_dependency_field_not_register() {
+        ioCContext.registerBean(MyBeanWithDependency.class);
+        ioCContext.registerBean(MyDependency.class);
+        assertThrows(IllegalStateException.class, () -> ioCContext.getBean(MyBeanWithDependency.class));
     }
 }

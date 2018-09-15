@@ -9,6 +9,7 @@ import java.util.HashMap;
 
 public class IoCContextImpl implements IoCContext {
 
+    public static final Class<CreateOnTheFly> DEPENDENCY_CLASS = CreateOnTheFly.class;
     private HashMap<Class<?>, Boolean> registerHashMap;
     private HashMap<Class<?>, Class<?>> actualClassHashMap;
 
@@ -31,31 +32,42 @@ public class IoCContextImpl implements IoCContext {
 
     @Override
     public <T> T getBean(Class<T> resolveClazz) {
+        checkClazzHasBeenRegistered(resolveClazz);
+
+        T instance = null;
+        try {
+            instance = (T) actualClassHashMap.get(resolveClazz).newInstance();
+            checkDependencyOnFieldAndInit(instance);
+        } catch (InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+        registerHashMap.put(resolveClazz, true);
+        return instance;
+    }
+
+    private <T> void checkDependencyOnFieldAndInit(T instance) throws IllegalAccessException, InstantiationException {
+        Field[] declaredFields = instance.getClass().getDeclaredFields();
+        for (Field field : declaredFields) {
+            if (field.getAnnotation(DEPENDENCY_CLASS) != null) {
+                field.setAccessible(true);
+                Class<?> fieldType = field.getType();
+                if (checkClazzHasBeenRegistered(fieldType)) {
+                    field.set(instance, fieldType.newInstance());
+                    field.setAccessible(false);
+                }
+
+            }
+        }
+    }
+
+    private <T> boolean checkClazzHasBeenRegistered(Class<T> resolveClazz) {
         if (resolveClazz == null) {
             throw new IllegalArgumentException();
         }
         if (!registerHashMap.containsKey(resolveClazz)) {
             throw new IllegalStateException();
         }
-
-        T instance = null;
-        try {
-            instance = (T) actualClassHashMap.get(resolveClazz).newInstance();
-            Field[] declaredFields = instance.getClass().getDeclaredFields();
-            for (Field field : declaredFields) {
-                if (field.getAnnotation(CreateOnTheFly.class) != null) {
-                    field.setAccessible(true);
-                    Class<?> fieldType = field.getType();
-                    field.set(instance, getBean(fieldType));
-                    field.setAccessible(false);
-
-                }
-            }
-        } catch (InstantiationException | IllegalAccessException e) {
-            e.printStackTrace();
-        }
-        registerHashMap.put(resolveClazz, true);
-        return instance;
+        return true;
     }
 
     private void checkResolveClazzWhenRegister(Class<?> resolveClazz, Class<?> beanClazz) {
