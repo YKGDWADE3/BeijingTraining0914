@@ -183,4 +183,12 @@ public class IoCContextImplTest {
         IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnable::run);
         assertEquals("beanClazz is mandatory", illegalArgumentException.getMessage());
     }
+
+    @Test
+    void should_create_instance_with_dependency() {
+        ioCContext.registerBean(MyBeanWithDependency.class);
+        ioCContext.registerBean(Mydependency.class);
+        MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
+        assertEquals(MyBeanWithDependency.class, myBeanWithDependency.getClass());
+    }
 }
