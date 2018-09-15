@@ -4,6 +4,7 @@ import bean.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.util.AbstractList;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -185,10 +186,12 @@ public class IoCContextImplTest {
     }
 
     @Test
-    void should_create_instance_with_dependency() {
+    void should_create_instance_with_dependency() throws NoSuchFieldException {
         ioCContext.registerBean(MyBeanWithDependency.class);
         ioCContext.registerBean(MyDependency.class);
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
+        Field myDependency = myBeanWithDependency.getClass().getDeclaredField("myDependency");
         assertEquals(MyBeanWithDependency.class, myBeanWithDependency.getClass());
+        assertEquals(MyDependency.class, myDependency.getType());
     }
 }

@@ -1,6 +1,9 @@
 package IoC;
 
+import annotation.CreateOnTheFly;
+
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashMap;
 
@@ -38,6 +41,16 @@ public class IoCContextImpl implements IoCContext {
         T instance = null;
         try {
             instance = (T) actualClassHashMap.get(resolveClazz).newInstance();
+            Field[] declaredFields = instance.getClass().getDeclaredFields();
+            for (Field field : declaredFields) {
+                if (field.getAnnotation(CreateOnTheFly.class) != null) {
+                    field.setAccessible(true);
+                    Class<?> fieldType = field.getType();
+                    field.set(instance, getBean(fieldType));
+                    field.setAccessible(false);
+
+                }
+            }
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
