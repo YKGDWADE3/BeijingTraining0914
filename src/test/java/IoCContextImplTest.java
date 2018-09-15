@@ -4,7 +4,7 @@ import bean.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import java.util.List;
+import java.util.AbstractList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -59,9 +59,9 @@ public class IoCContextImplTest {
     @Test
     void should_throw_exception_when_parameter_in_register_is_abstract() {
         Runnable runnableForCanNotInit = () ->{
-            ioCContext.registerBean(List.class);
+            ioCContext.registerBean(AbstractList.class);
         };
-        final String expectedMsg = List.class.getCanonicalName() + " is abstract";
+        final String expectedMsg = AbstractList.class.getCanonicalName() + " is abstract";
         IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnableForCanNotInit::run);
         assertEquals(expectedMsg, illegalArgumentException.getMessage());
     }
@@ -187,7 +187,7 @@ public class IoCContextImplTest {
     @Test
     void should_create_instance_with_dependency() {
         ioCContext.registerBean(MyBeanWithDependency.class);
-        ioCContext.registerBean(Mydependency.class);
+        ioCContext.registerBean(MyDependency.class);
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
         assertEquals(MyBeanWithDependency.class, myBeanWithDependency.getClass());
     }

@@ -50,7 +50,7 @@ public class IoCContextImpl implements IoCContext {
             throw new IllegalArgumentException("beanClazz is mandatory");
         }
         int modifiers = beanClazz.getModifiers();
-        if (Modifier.isInterface(modifiers) || beanClazz == Class.class) {
+        if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers) || beanClazz == Class.class) {
             throw new IllegalArgumentException(beanClazz.getCanonicalName() + " is abstract");
         }
 

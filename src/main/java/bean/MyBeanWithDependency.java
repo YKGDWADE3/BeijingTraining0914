@@ -4,5 +4,9 @@ import annotation.CreateOnTheFly;
 
 public class MyBeanWithDependency {
     @CreateOnTheFly
-    private Mydependency mydependency;
+    private MyDependency mydependency;
+
+    public MyDependency getMydependency() {
+        return mydependency;
+    }
 }
