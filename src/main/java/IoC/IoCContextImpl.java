@@ -45,14 +45,14 @@ public class IoCContextImpl implements IoCContext {
         return instance;
     }
 
-    private <T> void checkDependencyOnFieldAndInit(T instance) throws IllegalAccessException, InstantiationException {
+    private <T> void checkDependencyOnFieldAndInit(T instance) throws IllegalAccessException {
         Field[] declaredFields = instance.getClass().getDeclaredFields();
         for (Field field : declaredFields) {
             if (field.getAnnotation(DEPENDENCY_CLASS) != null) {
                 field.setAccessible(true);
                 Class<?> fieldType = field.getType();
                 if (checkClazzHasBeenRegistered(fieldType)) {
-                    field.set(instance, fieldType.newInstance());
+                    field.set(instance, getBean(fieldType));
                     field.setAccessible(false);
                 }
 

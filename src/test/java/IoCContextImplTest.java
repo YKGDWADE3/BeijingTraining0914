@@ -186,14 +186,19 @@ public class IoCContextImplTest {
     }
 
     @Test
-    void should_create_instance_with_dependency() throws NoSuchFieldException {
+    void should_create_instance_with_dependency() throws NoSuchFieldException, IllegalAccessException {
         ioCContext.registerBean(MyBeanWithDependency.class);
         ioCContext.registerBean(MyDependency.class);
         ioCContext.registerBean(MyBean.class);
+
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
         Field myDependency = myBeanWithDependency.getClass().getDeclaredField("myDependency");
+        Field myBean = myBeanWithDependency.getClass().getDeclaredField("myBean");
+        myBean.setAccessible(true);
+
         assertEquals(MyBeanWithDependency.class, myBeanWithDependency.getClass());
-        assertEquals(MyDependency.class, myDependency.getType());
+        assertEquals(MyDependency.class, myDependency.get(myBeanWithDependency).getClass());
+        assertEquals(MyBean.class, myBean.get(myBeanWithDependency).getClass());
     }
 
     @Test

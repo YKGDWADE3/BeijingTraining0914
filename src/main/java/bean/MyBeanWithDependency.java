@@ -4,7 +4,7 @@ import annotation.CreateOnTheFly;
 
 public class MyBeanWithDependency {
     @CreateOnTheFly
-    private MyDependency myDependency;
+    public MyDependency myDependency;
 
     @CreateOnTheFly
     private MyBean myBean;
