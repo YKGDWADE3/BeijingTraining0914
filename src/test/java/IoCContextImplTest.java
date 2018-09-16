@@ -192,7 +192,7 @@ public class IoCContextImplTest {
     }
 
     @Test
-    void should_instance_all_the_field_with_annotation_even_in_super_clazz() {
+    void should_instance_all_the_field_with_annotation_even_in_super_clazz_and_super_first() {
         registerClazzs(ioCContext, MyBeanWithDependency.class, MyDependency.class, MyBean.class, MyBaseBean.class);
 
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
