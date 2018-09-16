@@ -241,10 +241,11 @@ public class IoCContextImplTest {
     void should_throw_first_exception_when_two_exception_throw_in_close() {
         MyException myException = assertThrows(MyException.class, () -> {
             try (IoCContext ioCContext = new IoCContextImpl()) {
-                registerAndGetBeanClazzs(ioCContext, MyExceptionAutoClose.class, MyAnotherExceptionAutoClose.class);
+                registerAndGetBeanClazzs(ioCContext, MyBeanAutoClose.class, MyExceptionAutoClose.class, MyAnotherExceptionAutoClose.class);
             }
         });
         assertEquals("Another myException", myException.getMessage());
+        assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
     }
 
     private void registerAndGetBeanClazzs(IoCContext ioCContext, Class<?>... classes) {
