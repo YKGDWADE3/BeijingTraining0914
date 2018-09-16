@@ -5,17 +5,21 @@ import annotation.CreateOnTheFly;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class IoCContextImpl implements IoCContext {
 
     public static final Class<CreateOnTheFly> DEPENDENCY_CLASS = CreateOnTheFly.class;
     private HashMap<Class<?>, Boolean> registerHashMap;
     private HashMap<Class<?>, Class<?>> actualClassHashMap;
+    private List<String> orderInitFieldList;
 
     public IoCContextImpl() {
         this.registerHashMap = new HashMap<>();
         this.actualClassHashMap = new HashMap<>();
+        this.orderInitFieldList = new ArrayList<>();
     }
 
     @Override
@@ -37,7 +41,7 @@ public class IoCContextImpl implements IoCContext {
         T instance = null;
         try {
             instance = (T) actualClassHashMap.get(resolveClazz).newInstance();
-            checkDependencyOnFieldAndInit(instance);
+            checkSuperClazzField(instance, instance.getClass());
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
         }
@@ -45,20 +49,33 @@ public class IoCContextImpl implements IoCContext {
         return instance;
     }
 
-    private <T> void checkDependencyOnFieldAndInit(T instance) throws IllegalAccessException {
-        Field[] declaredFields = instance.getClass().getDeclaredFields();
+    private <T> void checkSuperClazzField(T instance, Class<?> instanceClazz) throws IllegalAccessException {
+        Class<?> superclass = instanceClazz.getSuperclass();
+        if (superclass != null && !superclass.equals(Object.class)) {
+            checkSuperClazzField(instance, superclass);
+        }
+        checkDependencyOnFieldAndInit(instance, instanceClazz);
+
+    }
+
+
+    private <T> void checkDependencyOnFieldAndInit(T instance, Class<?> superClazz) throws IllegalAccessException {
+        Field[] declaredFields = superClazz.getDeclaredFields();
         for (Field field : declaredFields) {
             if (field.getAnnotation(DEPENDENCY_CLASS) != null) {
                 field.setAccessible(true);
                 Class<?> fieldType = field.getType();
                 if (checkClazzHasBeenRegistered(fieldType)) {
                     field.set(instance, getBean(fieldType));
+                    orderInitFieldList.add(superClazz.getName());
                     field.setAccessible(false);
                 }
 
             }
         }
     }
+
+
 
     private <T> boolean checkClazzHasBeenRegistered(Class<T> resolveClazz) {
         if (resolveClazz == null) {
@@ -103,6 +120,7 @@ public class IoCContextImpl implements IoCContext {
         actualClassHashMap.put(resolveClazz, beanClazz);
     }
 
-
-
+    public List<String> getOrderInitFieldList() {
+        return orderInitFieldList;
+    }
 }
