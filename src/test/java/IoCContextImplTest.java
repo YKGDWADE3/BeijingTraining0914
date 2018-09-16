@@ -30,19 +30,17 @@ public class IoCContextImplTest {
 
     @Test
     void should_get_instance_for_once_normally() {
-        IoCContext context = new IoCContextImpl();
-        context.registerBean(MyBean.class);
-        MyBean myBeanInstance = context.getBean(MyBean.class);
+        registerClazzs(ioCContext, MyBean.class);
+        MyBean myBeanInstance = ioCContext.getBean(MyBean.class);
         assertEquals(MyBean.class, myBeanInstance.getClass());
     }
 
     @Test
     void should_get_two_instance_after_get_bean_twice() {
-        IoCContext context = new IoCContextImpl();
-        context.registerBean(MyBean.class);
+        registerClazzs(ioCContext, MyBean.class);
 
-        MyBean myBeanInstance1 = context.getBean(MyBean.class);
-        MyBean myBeanInstance2 = context.getBean(MyBean.class);
+        MyBean myBeanInstance1 = ioCContext.getBean(MyBean.class);
+        MyBean myBeanInstance2 = ioCContext.getBean(MyBean.class);
 
         assertEquals(myBeanInstance1.getClass(), myBeanInstance2.getClass());
         assertNotSame(myBeanInstance1, myBeanInstance2);
@@ -50,85 +48,66 @@ public class IoCContextImplTest {
 
     @Test
     void should_get_instance_what_user_want() {
-        IoCContext context = new IoCContextImpl();
-        context.registerBean(MyBean.class);
-        context.registerBean(String.class);
-        String stringInstance = context.getBean(String.class);
+        registerClazzs(ioCContext, MyBean.class, String.class);
+        String stringInstance = ioCContext.getBean(String.class);
 
         assertEquals(String.class, stringInstance.getClass());
     }
 
     @Test
     void should_throw_exception_when_parameter_null_in_get_bean() {
-        Runnable runnable = () ->{
-            ioCContext.registerBean(null);
-        };
         final String expectedMsg = "beanClazz is mandatory";
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnable::run);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, () -> ioCContext.registerBean(null));
         assertEquals(expectedMsg, illegalArgumentException.getMessage());
     }
 
     @Test
     void should_throw_exception_when_parameter_in_register_is_abstract() {
-        Runnable runnableForCanNotInit = () ->{
-            ioCContext.registerBean(AbstractList.class);
-        };
         final String expectedMsg = AbstractList.class.getCanonicalName() + " is abstract";
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnableForCanNotInit::run);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class,
+                () -> registerClazzs(ioCContext, AbstractList.class));
         assertEquals(expectedMsg, illegalArgumentException.getMessage());
     }
 
     @Test
     void should_throw_exception_when_parameter_in_register_is_interface() {
-        Runnable runnableForCanNotInit = () ->{
-            ioCContext.registerBean(Iterable.class);
-        };
         final String expectedMsg = Iterable.class.getCanonicalName() + " is abstract";
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnableForCanNotInit::run);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class,
+                () -> registerClazzs(ioCContext, Iterable.class));
         assertEquals(expectedMsg, illegalArgumentException.getMessage());
     }
 
     @Test
     void should_throw_exception_when_clazz_has_no_default_constructor() {
-        Runnable runnableForNoDefaultConstructor = () ->{
-            ioCContext.registerBean(MyBeanWithoutDefaultConstructor.class);
-        };
         final String expectedMsg = MyBeanWithoutDefaultConstructor.class.getCanonicalName() + " has no default constructor.";
-        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class, runnableForNoDefaultConstructor::run);
+        IllegalArgumentException illegalArgumentException = assertThrows(IllegalArgumentException.class,
+                () -> registerClazzs(ioCContext, MyBeanWithoutDefaultConstructor.class));
         assertEquals(expectedMsg, illegalArgumentException.getMessage());
     }
 
     @Test
     void should_not_throw_exception_register_again() {
-        ioCContext.registerBean(String.class);
-        Runnable runnableForRegisterAgain = () ->{
-            ioCContext.registerBean(String.class);
-        };
-        assertDoesNotThrow(runnableForRegisterAgain::run);
+        registerClazzs(ioCContext, String.class);
+
+        assertDoesNotThrow(() -> registerClazzs(ioCContext, String.class));
     }
 
     @Test
     void should_throw_exception_when_resolveClazz_null(){
-        Runnable runnableForArgument = () -> {
-            ioCContext.getBean(null);
-        };
-        assertThrows(IllegalArgumentException.class, runnableForArgument::run);
+        assertThrows(IllegalArgumentException.class, () -> ioCContext.getBean(null));
     }
 
     @Test
     void should_throw_exception_when_get_bean_before_register() {
-        Runnable runnableForState = () -> {
-            ioCContext.getBean(String.class);
-        };
-        assertThrows(IllegalStateException.class, runnableForState::run);
+        assertThrows(IllegalStateException.class, () -> getBeanClazzs(ioCContext, String.class));
 
     }
 
     @Test
     void should_throw_exception_in_get_bean_when_constructor_throw_exception() {
-        ioCContext.registerBean(MyBeanThrowException.class);
+        registerClazzs(ioCContext, MyBeanThrowException.class);
         try {
-            ioCContext.getBean(MyBeanThrowException.class);
+            getBeanClazzs(ioCContext, MyBeanThrowException.class);
         } catch (Exception e) {
             assertEquals(MyException.class, e.getClass());
         }
@@ -136,13 +115,8 @@ public class IoCContextImplTest {
 
     @Test
     void should_throw_exception_when_register_again_after_get_bean() throws Exception {
-        ioCContext.registerBean(String.class);
-        ioCContext.getBean(String.class);
-        Runnable runnableForState = () -> {
-            ioCContext.registerBean(String.class);
-
-        };
-        assertThrows(IllegalStateException.class, runnableForState::run);
+        registerAndGetBeanClazzs(ioCContext, String.class);
+        assertThrows(IllegalStateException.class, () -> ioCContext.registerBean(String.class));
     }
 
     @Test
@@ -199,11 +173,7 @@ public class IoCContextImplTest {
 
     @Test
     void should_create_instance_with_dependency() throws NoSuchFieldException, IllegalAccessException {
-        ioCContext.registerBean(MyBeanWithDependency.class);
-        ioCContext.registerBean(MyDependency.class);
-        ioCContext.registerBean(MyBean.class);
-        ioCContext.registerBean(MyBaseBean.class);
-
+        registerClazzs(ioCContext, MyBeanWithDependency.class, MyDependency.class, MyBean.class, MyBaseBean.class);
 
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
         Field myDependency = myBeanWithDependency.getClass().getDeclaredField("myDependency");
@@ -217,17 +187,13 @@ public class IoCContextImplTest {
 
     @Test
     void should_throw_exception_when_any_dependency_field_not_register() {
-        ioCContext.registerBean(MyBeanWithDependency.class);
-        ioCContext.registerBean(MyDependency.class);
+        registerClazzs(ioCContext, MyBeanWithDependency.class, MyDependency.class);
         assertThrows(IllegalStateException.class, () -> ioCContext.getBean(MyBeanWithDependency.class));
     }
 
     @Test
     void should_instance_all_the_field_with_annotation_even_in_super_clazz() {
-        ioCContext.registerBean(MyBeanWithDependency.class);
-        ioCContext.registerBean(MyDependency.class);
-        ioCContext.registerBean(MyBean.class);
-        ioCContext.registerBean(MyBaseBean.class);
+        registerClazzs(ioCContext, MyBeanWithDependency.class, MyDependency.class, MyBean.class, MyBaseBean.class);
 
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
 
@@ -237,9 +203,7 @@ public class IoCContextImplTest {
 
     @Test
     void should_throw_exception_when_super_clazz_field_with_annotation_not_register() {
-        ioCContext.registerBean(MyBeanWithDependency.class);
-        ioCContext.registerBean(MyDependency.class);
-        ioCContext.registerBean(MyBean.class);
+        registerClazzs(ioCContext, MyBeanWithDependency.class, MyDependency.class, MyBean.class);
 
         assertThrows(IllegalStateException.class, () -> ioCContext.getBean(MyBeanWithDependency.class));
     }
@@ -247,8 +211,7 @@ public class IoCContextImplTest {
     @Test
     void should_invoke_close_method_after_ioc_close_if_auto_close_instance_init_by_get_bean() throws Exception {
         try (IoCContext ioCContext = new IoCContextImpl()){
-            ioCContext.registerBean(MyBeanAutoClose.class);
-            ioCContext.getBean(MyBeanAutoClose.class);
+            registerAndGetBeanClazzs(ioCContext, MyBeanAutoClose.class);
         }
 
         assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
@@ -257,7 +220,7 @@ public class IoCContextImplTest {
     @Test
     void should_invoke_close_in_opposite_order_of_get_bean() throws Exception {
         try (IoCContext ioCContext = new IoCContextImpl()){
-            registerAndGetBeanForStep6(ioCContext, MyBeanAutoClose.class, MyAnotherAutoClose.class);
+            registerAndGetBeanClazzs(ioCContext, MyBeanAutoClose.class, MyAnotherAutoClose.class);
         }
 
         assertEquals(MyAnotherAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
@@ -268,7 +231,7 @@ public class IoCContextImplTest {
     void should_call_all_close_even_throw_exception_in_one_close() {
         assertThrows(MyException.class, () -> {
             try (IoCContext ioCContext = new IoCContextImpl()){
-                registerAndGetBeanForStep6(ioCContext, MyBeanAutoClose.class, MyExceptionAutoClose.class);
+                registerAndGetBeanClazzs(ioCContext, MyBeanAutoClose.class, MyExceptionAutoClose.class);
             }
         });
         assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
@@ -278,16 +241,28 @@ public class IoCContextImplTest {
     void should_throw_first_exception_when_two_exception_throw_in_close() {
         MyException myException = assertThrows(MyException.class, () -> {
             try (IoCContext ioCContext = new IoCContextImpl()) {
-                registerAndGetBeanForStep6(ioCContext, MyExceptionAutoClose.class, MyAnotherExceptionAutoClose.class);
+                registerAndGetBeanClazzs(ioCContext, MyExceptionAutoClose.class, MyAnotherExceptionAutoClose.class);
             }
         });
         assertEquals("Another myException", myException.getMessage());
     }
 
-    private void registerAndGetBeanForStep6(IoCContext ioCContext, Class<?>... classes) {
+    private void registerAndGetBeanClazzs(IoCContext ioCContext, Class<?>... classes) {
+        registerClazzs(ioCContext, classes);
+        getBeanClazzs(ioCContext, classes);
+    }
+
+    private void registerClazzs(IoCContext ioCContext, Class<?>... classes) {
         for (Class<?> clazz : classes) {
             ioCContext.registerBean(clazz);
+        }
+    }
+
+    private void getBeanClazzs(IoCContext ioCContext, Class<?>... classes) {
+        for (Class<?> clazz : classes) {
             ioCContext.getBean(clazz);
         }
     }
+
+
 }
