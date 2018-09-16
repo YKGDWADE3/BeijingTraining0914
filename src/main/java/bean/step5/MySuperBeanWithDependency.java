@@ -1,6 +1,8 @@
-package bean;
+package bean.step5;
 
 import annotation.CreateOnTheFly;
+import bean.step3.MyBaseBean;
+import bean.step4.MyDependency;
 
 import java.util.ArrayList;
 

@@ -1,4 +1,4 @@
-package bean;
+package bean.step2;
 
 public class MyBeanWithoutDefaultConstructor {
     private String name;

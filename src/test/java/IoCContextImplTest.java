@@ -1,6 +1,17 @@
 import IoC.IoCContext;
 import IoC.IoCContextImpl;
 import bean.*;
+import bean.step2.MyBean;
+import bean.step2.MyBeanThrowException;
+import bean.step2.MyBeanWithoutDefaultConstructor;
+import bean.step3.*;
+import bean.step4.MyBeanWithDependency;
+import bean.step4.MyDependency;
+import bean.step5.MySuperBeanWithDependency;
+import bean.step6.MyAnotherAutoClose;
+import bean.step6.MyAnotherExceptionAutoClose;
+import bean.step6.MyBeanAutoClose;
+import bean.step6.MyExceptionAutoClose;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -153,6 +164,7 @@ public class IoCContextImplTest {
     void should_one_clazz_implement_interface_and_extends_clazz_get_two_different_instance() {
         ioCContext.registerBean(MyBaseBean.class, MyBeanExtendsAndImplements.class);
         ioCContext.registerBean(MyBeanBehavior.class, MyBeanExtendsAndImplements.class);
+
         MyBaseBean myExtendsBean = ioCContext.getBean(MyBaseBean.class);
         MyBeanBehavior myImplementsBean = ioCContext.getBean(MyBeanBehavior.class);
 
@@ -190,6 +202,8 @@ public class IoCContextImplTest {
         ioCContext.registerBean(MyBeanWithDependency.class);
         ioCContext.registerBean(MyDependency.class);
         ioCContext.registerBean(MyBean.class);
+        ioCContext.registerBean(MyBaseBean.class);
+
 
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
         Field myDependency = myBeanWithDependency.getClass().getDeclaredField("myDependency");
@@ -213,6 +227,7 @@ public class IoCContextImplTest {
         ioCContext.registerBean(MyBeanWithDependency.class);
         ioCContext.registerBean(MyDependency.class);
         ioCContext.registerBean(MyBean.class);
+        ioCContext.registerBean(MyBaseBean.class);
 
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
 

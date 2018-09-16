@@ -1,4 +1,6 @@
-package bean;
+package bean.step6;
+
+import bean.MyException;
 
 public class MyExceptionAutoClose implements AutoCloseable {
     @Override
