@@ -238,4 +238,17 @@ public class IoCContextImplTest {
 
         assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
     }
+
+    @Test
+    void should_invoke_close_in_opposite_order_of_get_bean() throws Exception {
+        try (IoCContext ioCContext = new IoCContextImpl()){
+            ioCContext.registerBean(MyBeanAutoClose.class);
+            ioCContext.registerBean(MyAnotherAutoClose.class);
+            ioCContext.getBean(MyBeanAutoClose.class);
+            ioCContext.getBean(MyAnotherAutoClose.class);
+        }
+
+        assertEquals(MyAnotherAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
+        assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(1));
+    }
 }
