@@ -5,10 +5,7 @@ import annotation.CreateOnTheFly;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class IoCContextImpl implements IoCContext {
 
@@ -18,6 +15,7 @@ public class IoCContextImpl implements IoCContext {
     private List<String> orderOfInitFieldList;
     private Stack<AutoCloseable> autoCloseableInstanceStack;
     public static final List<String> orderOfAutoCloseList = new ArrayList<>();
+    private Exception exceptionInClose;
 
     public IoCContextImpl() {
         this.registerHashMap = new HashMap<>();
@@ -131,12 +129,29 @@ public class IoCContextImpl implements IoCContext {
         return orderOfInitFieldList;
     }
 
+    private void addDefaultExceptionInClose(Exception defaultException) {
+        if (exceptionInClose == null) {
+            exceptionInClose = defaultException;
+        }
+    }
+
+    private void throwExceptionInClose() throws Exception {
+        if (exceptionInClose != null) {
+            throw exceptionInClose;
+        }
+    }
+
     @Override
     public void close() throws Exception {
         orderOfAutoCloseList.clear();
         while (!autoCloseableInstanceStack.empty()) {
             AutoCloseable autoCloseable = autoCloseableInstanceStack.pop();
-            autoCloseable.close();
+            try {
+                autoCloseable.close();
+            } catch (Exception e) {
+                addDefaultExceptionInClose(e);
+            }
         }
+        throwExceptionInClose();
     }
 }

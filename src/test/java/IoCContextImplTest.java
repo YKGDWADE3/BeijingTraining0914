@@ -242,13 +242,27 @@ public class IoCContextImplTest {
     @Test
     void should_invoke_close_in_opposite_order_of_get_bean() throws Exception {
         try (IoCContext ioCContext = new IoCContextImpl()){
-            ioCContext.registerBean(MyBeanAutoClose.class);
-            ioCContext.registerBean(MyAnotherAutoClose.class);
-            ioCContext.getBean(MyBeanAutoClose.class);
-            ioCContext.getBean(MyAnotherAutoClose.class);
+            registerAndGetBeanForStep6(ioCContext, MyBeanAutoClose.class, MyAnotherAutoClose.class);
         }
 
         assertEquals(MyAnotherAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
         assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(1));
+    }
+
+    @Test
+    void should_call_all_close_even_throw_exception_in_one_close() {
+        assertThrows(MyException.class, () -> {
+            try (IoCContext ioCContext = new IoCContextImpl()){
+                registerAndGetBeanForStep6(ioCContext, MyBeanAutoClose.class, MyExceptionAutoClose.class);
+            }
+        });
+        assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
+    }
+
+    private void registerAndGetBeanForStep6(IoCContext ioCContext, Class<?>... classes) {
+        for (Class<?> clazz : classes) {
+            ioCContext.registerBean(clazz);
+            ioCContext.getBean(clazz);
+        }
     }
 }
