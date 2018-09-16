@@ -9,6 +9,9 @@ public class MySuperBeanWithDependency {
     @CreateOnTheFly
     private MyDependency mySuperDependencyField;
 
+    @CreateOnTheFly
+    private MyBaseBean myBaseBean;
+
     public MyDependency getMySuperDependencyField() {
         return mySuperDependencyField;
     }

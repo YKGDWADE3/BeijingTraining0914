@@ -219,4 +219,13 @@ public class IoCContextImplTest {
         assertEquals(MyDependency.class, myBeanWithDependency.getMySuperDependencyField().getClass());
         assertEquals(MySuperBeanWithDependency.class.getName(), ioCContext.getOrderInitFieldList().get(0));
     }
+
+    @Test
+    void should_throw_exception_when_super_clazz_field_with_annotation_not_register() {
+        ioCContext.registerBean(MyBeanWithDependency.class);
+        ioCContext.registerBean(MyDependency.class);
+        ioCContext.registerBean(MyBean.class);
+
+        assertThrows(IllegalStateException.class, () -> ioCContext.getBean(MyBeanWithDependency.class));
+    }
 }
