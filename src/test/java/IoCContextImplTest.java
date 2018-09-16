@@ -217,7 +217,7 @@ public class IoCContextImplTest {
         MyBeanWithDependency myBeanWithDependency = ioCContext.getBean(MyBeanWithDependency.class);
 
         assertEquals(MyDependency.class, myBeanWithDependency.getMySuperDependencyField().getClass());
-        assertEquals(MySuperBeanWithDependency.class.getName(), ioCContext.getOrderInitFieldList().get(0));
+        assertEquals(MySuperBeanWithDependency.class.getName(), ioCContext.getOrderOfInitFieldList().get(0));
     }
 
     @Test
@@ -227,5 +227,15 @@ public class IoCContextImplTest {
         ioCContext.registerBean(MyBean.class);
 
         assertThrows(IllegalStateException.class, () -> ioCContext.getBean(MyBeanWithDependency.class));
+    }
+
+    @Test
+    void should_invoke_close_method_after_ioc_close_if_auto_close_instance_init_by_get_bean() throws Exception {
+        try (IoCContext ioCContext = new IoCContextImpl()){
+            ioCContext.registerBean(MyBeanAutoClose.class);
+            ioCContext.getBean(MyBeanAutoClose.class);
+        }
+
+        assertEquals(MyBeanAutoClose.class.getName(), IoCContextImpl.orderOfAutoCloseList.get(0));
     }
 }

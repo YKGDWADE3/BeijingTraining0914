@@ -8,18 +8,22 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Stack;
 
 public class IoCContextImpl implements IoCContext {
 
     public static final Class<CreateOnTheFly> DEPENDENCY_CLASS = CreateOnTheFly.class;
     private HashMap<Class<?>, Boolean> registerHashMap;
     private HashMap<Class<?>, Class<?>> actualClassHashMap;
-    private List<String> orderInitFieldList;
+    private List<String> orderOfInitFieldList;
+    private Stack<AutoCloseable> autoCloseableInstanceStack;
+    public static final List<String> orderOfAutoCloseList = new ArrayList<>();
 
     public IoCContextImpl() {
         this.registerHashMap = new HashMap<>();
         this.actualClassHashMap = new HashMap<>();
-        this.orderInitFieldList = new ArrayList<>();
+        this.orderOfInitFieldList = new ArrayList<>();
+        this.autoCloseableInstanceStack = new Stack<>();
     }
 
     @Override
@@ -41,6 +45,9 @@ public class IoCContextImpl implements IoCContext {
         T instance = null;
         try {
             instance = (T) actualClassHashMap.get(resolveClazz).newInstance();
+            if (instance instanceof AutoCloseable) {
+                autoCloseableInstanceStack.push((AutoCloseable) instance);
+            }
             checkSuperClazzField(instance, instance.getClass());
         } catch (InstantiationException | IllegalAccessException e) {
             e.printStackTrace();
@@ -67,7 +74,7 @@ public class IoCContextImpl implements IoCContext {
                 Class<?> fieldType = field.getType();
                 if (checkClazzHasBeenRegistered(fieldType)) {
                     field.set(instance, getBean(fieldType));
-                    orderInitFieldList.add(superClazz.getName());
+                    orderOfInitFieldList.add(superClazz.getName());
                     field.setAccessible(false);
                 }
 
@@ -120,7 +127,16 @@ public class IoCContextImpl implements IoCContext {
         actualClassHashMap.put(resolveClazz, beanClazz);
     }
 
-    public List<String> getOrderInitFieldList() {
-        return orderInitFieldList;
+    public List<String> getOrderOfInitFieldList() {
+        return orderOfInitFieldList;
+    }
+
+    @Override
+    public void close() throws Exception {
+        orderOfAutoCloseList.clear();
+        while (!autoCloseableInstanceStack.empty()) {
+            AutoCloseable autoCloseable = autoCloseableInstanceStack.pop();
+            autoCloseable.close();
+        }
     }
 }
